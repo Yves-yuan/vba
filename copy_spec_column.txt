@@ -1,0 +1,114 @@
+Sub copy2_new_sheet()
+'
+' copy2_new_sheet 宏
+' 保存到新sheet
+'
+
+'************************
+'      配置参数
+'************************
+Dim columnNameRowNum '表格定义的列名所在的行数
+columnNameRowNum = 2 'default
+Dim columnNameSet '需要拷贝的列名的集合
+Set columnNameSet = CreateObject("Scripting.Dictionary")
+columnNameSet("id") = 1
+columnNameSet("gender") = 1
+columnNameSet("age") = 1
+
+'************************
+'       OVER
+'************************
+
+
+'变量声明
+Dim oriSheet As Worksheet, copySheet As Worksheet
+Dim oriCell As CellFormat
+Dim ID As Range
+Dim hello
+hello = "hello,im trying to copy the data to another sheet named data_copy!"
+MsgBox (hello)
+
+'删除多余的工作表
+'sheetNum = Worksheets.Count
+'If sheetNum >= 2 Then
+'    Application.DisplayAlerts = False '删除工作表警告提示去消
+'    For Index = 2 To sheetNum Step 1
+'
+'       Sheets(2).Delete
+'
+'    Next
+'    Application.DisplayAlerts = True
+'End If
+
+'在第二页添加一个工作表
+Dim b  As String
+b = Format(Time, "hhmmss")     '当前时间
+MsgBox (("data_copy" & b))
+Worksheets.Add(After:=Worksheets(1)).Name = ("data_copy" & b)
+
+Set oriSheet = Worksheets(1)
+Set copySheet = Worksheets(2)
+Cell = oriSheet.Cells(1, 1)
+
+
+'遍历找到需要拷贝的列名并拷贝
+Dim rowNum, columnNum
+rowNum = oriSheet.UsedRange.Rows.Count
+columnNum = oriSheet.UsedRange.Columns.Count
+Dim copyCount As Integer
+copyCount = 0
+For i = 1 To columnNum
+    If columnNameSet.Exists(oriSheet.Cells(columnNameRowNum, i).Value) Then
+        copyCount = copyCount + 1
+        num = oriSheet.Cells(columnNameRowNum, i).Column
+        columnName = sz2l(num)
+        columnName = columnName2RangeColumn(columnName)
+        a = Copy(oriSheet, copySheet, columnName, rowNum, copyCount)
+    End If
+Next
+
+
+End Sub
+
+'本地函数定义
+
+'把列索引的数字形式转换为字母形式
+Function sz2l(h) As String
+a = h: bb = ""
+
+Do
+    i = Int(a / 26)
+    r = a Mod 26
+    If r <> 0 Then
+        bb = Chr(r + 64) & bb
+    Else
+        bb = "Z" & bb
+    End If
+    a = i
+Loop While i > 0
+
+sz2l = bb
+End Function
+
+'把行的名字转换为"a:a"的形式
+Function columnName2RangeColumn(n) As String
+Dim result As String
+result = result & n & ":"
+result = result & n
+columnName2RangeColumn = result
+End Function
+
+' 把指令列名的数据从原始表拷贝到新的表,至少拷贝表的行数行
+Function Copy(oriSheet As Worksheet, copySheet As Worksheet, columnName, minNum, columnNum)
+    Count = 0
+    For Each Cell In oriSheet.Range(columnName)
+        If Cell.Value = "" And Count > minNum Then
+            Exit For
+        End If
+        Count = Count + 1
+        If Count > 100 Then
+            Exit For
+        End If
+       copySheet.Cells(Cell.Row, columnNum) = Cell.Value
+    Next
+End Function
